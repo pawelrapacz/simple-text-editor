@@ -19,15 +19,39 @@
 #ifndef TEXTBUFFER_H
 #define TEXTBUFFER_H
 
+#include <string>
+#include <vector>
+
+#include "FileHandler.hpp"
+
+
 namespace ste
 {
     class TextBuffer
     {
-    private:
-        /* data */
     public:
-        TextBuffer(/* args */);
+        const std::vector <std::string>& text = _text;
+        
+        TextBuffer(FileHandler& fileHandle);
         ~TextBuffer();
+        unsigned int cursorPositionX() const noexcept;
+        unsigned int cursorPositionY() const noexcept;
+        void moveCursorX(int offset) noexcept;
+        void moveCursorY(int offset) noexcept;
+        void setCursorX(unsigned int pos);
+        void setCursorY(unsigned int pos);
+        void setCursor(unsigned int posX, unsigned int posY);
+        void insertChar(const char) noexcept;
+        void deleteChar() noexcept;
+
+
+    private:
+        std::vector <std::string> _text;
+        unsigned int _cursorPositionX;
+        unsigned int _cursorPositionY;
+
+        void newLineBreak() noexcept;
+        void deleteLineBreak() noexcept;
     };
 } // namespace ste
 
