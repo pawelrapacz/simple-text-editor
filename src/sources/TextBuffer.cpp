@@ -20,7 +20,6 @@
 #include <cstddef>
 #include <cmath>
 #include <vector>
-#include <iostream>
 
 
 #include "TextBuffer.hpp"
@@ -48,12 +47,14 @@ unsigned int ste::TextBuffer::cursorPositionY() const noexcept
 void ste::TextBuffer::moveCursorX(int offset) noexcept
 {
     if (0 > offset && std::abs(offset) > _cursorPositionX) {
-        _cursorPositionX = 0;
+        moveCursorY(-1);
+        if (0 != _cursorPositionY) _cursorPositionX = _text.at(_cursorPositionY).size();
     }
     else if (_text.at(_cursorPositionY).size() < _cursorPositionX + offset) {
+        moveCursorY(1);
         _cursorPositionX = _text.at(_cursorPositionY).size();
     }
-    else {
+    else{
         _cursorPositionX += offset;
     }
 }
@@ -63,11 +64,12 @@ void ste::TextBuffer::moveCursorY(int offset) noexcept
     if (0 > offset && std::abs(offset) > _cursorPositionY) {
         _cursorPositionY = 0;
     }
-    else if (_text.size() < _cursorPositionY + offset) {
-        _cursorPositionY = _text.size();
+    else if (_text.size() <= _cursorPositionY + offset) {
+        _cursorPositionY = _text.size() - 1;
     }
     else {
         _cursorPositionY += offset;
+        if (_cursorPositionX > _text.at(_cursorPositionY).length()) _cursorPositionX = _text.at(_cursorPositionY).length();
     }
 }
 
