@@ -19,15 +19,34 @@
 #ifndef FILEHANDLER_H
 #define FILEHANDLER_H
 
+#include <filesystem>
+#include <fstream>
+#include <string>
+#include <vector>
+#include <cstddef>
+#include <stdexcept>
+
+
 namespace ste
 {
     class FileHandler
     {
-    private:
-        /* data */
     public:
-        FileHandler(/* args */);
+        FileHandler(const char* pathToFile);
+        FileHandler(const std::string pathToFile);
         ~FileHandler();
+
+        std::size_t numOfLines() const noexcept;
+        std::filesystem::path path() const noexcept;
+        void path(const char* pathToFile) noexcept;
+        void path(const std::string pathToFile) noexcept;
+        void read(std::vector<std::string>& text) const noexcept;
+        void write(const std::vector <std::string>& text) const;
+
+
+    private:
+        std::filesystem::path _path;
+        mutable std::fstream _file;
     };
 } // namespace ste
 
