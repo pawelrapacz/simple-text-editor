@@ -3,6 +3,10 @@ project(ste)
 
 set(SOURCE_FILES
     src/main.cpp
+    src/sources/ste.cpp
+    src/sources/Editor.cpp
+    src/sources/TextBuffer.cpp
+    src/sources/FileHandler.cpp
 )
 set(FLAGS -Wall -Wextra)
 
