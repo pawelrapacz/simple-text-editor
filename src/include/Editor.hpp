@@ -19,15 +19,52 @@
 #ifndef EDITOR_H
 #define EDITOR_H
 
+#include <windows.h>
+
+#include "ste.hpp"
+#include "FileHandler.hpp"
+#include "TextBuffer.hpp"
+
+
 namespace ste
 {
     class Editor
     {
     private:
-        /* data */
+        bool _running = true;
+        unsigned int _textOffset = 0;
+        FileHandler _fileHandle;
+
+        static constexpr unsigned int  EDITOR_WORKSPACE_OFFSET_Y = 2;
+        static constexpr unsigned int  EDITOR_WORKSPACE_OFFSET_X = 5;
+        
+        //  console porperties
+        HANDLE _console;
+        DWORD _consoleMode;
+        DWORD _originalConsoleMode;
+        CONSOLE_CURSOR_INFO _cursorInfo;
+        mutable CONSOLE_SCREEN_BUFFER_INFO _consoleInfo;
+
+        void updateTextOffset(unsigned int windowHeight) noexcept;
+
     public:
-        Editor(/* args */);
+        Editor(const char* pathToFile);
+        Editor(const std::string pathToFile);
         ~Editor();
+        
+        TextBuffer buffer;
+        enum class exit_type {
+            save,
+            no_save
+        };
+
+        void start();
+        void keyboardHandler() noexcept;
+        void display() noexcept;
+        void clearConsole() const;
+        void save() const;
+        void exit(exit_type type = exit_type::save);
+        static void help() noexcept;
     };
 } // namespace ste
 
