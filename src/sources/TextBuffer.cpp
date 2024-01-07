@@ -28,7 +28,6 @@
 
 
 ste::TextBuffer::TextBuffer(FileHandler& fileHandle)
-    : _cursorPositionX(0), _cursorPositionY(0)
 {
     _text.reserve(fileHandle.numOfLines() + 100);
     fileHandle.read(_text);
@@ -39,52 +38,70 @@ ste::TextBuffer::~TextBuffer() {}
 
 
 unsigned int ste::TextBuffer::cursorPositionX() const noexcept
-{ return _cursorPositionX; }
+{ return _cursor.x; }
 
 unsigned int ste::TextBuffer::cursorPositionY() const noexcept
-{ return _cursorPositionY; }
+{ return _cursor.y; }
 
 void ste::TextBuffer::moveCursorX(int offset) noexcept
 {
-    if (0 > offset && std::abs(offset) > _cursorPositionX) {
-        moveCursorY(-1);
-        if (0 != _cursorPositionY) _cursorPositionX = _text.at(_cursorPositionY).size();
+    if (0 > offset && std::abs(offset) > _cursor.x) {
+        if (0 != _cursor.y) {
+            moveCursorY(-1);
+            _cursor.x = _text.at(_cursor.y).length();
+        }
     }
-    else if (_text.at(_cursorPositionY).size() < _cursorPositionX + offset) {
-        moveCursorY(1);
-        _cursorPositionX = _text.at(_cursorPositionY).size();
+    else if (_text.at(_cursor.y).length() < _cursor.x + offset) {
+        if (_text.size() - 1 != _cursor.y) {
+            moveCursorY(1);
+            _cursor.x = 0;
+        }
     }
-    else{
-        _cursorPositionX += offset;
+    else {
+        _cursor.x += offset;
     }
+}
+
+void ste::TextBuffer::moveCursorX(Cursor::pos pos) noexcept
+{
+    if (Cursor::pos::begin == pos) _cursor.x = 0;
+    else if (Cursor::pos::end == pos) _cursor.x = _text.at(_cursor.y).length();
 }
 
 void ste::TextBuffer::moveCursorY(int offset) noexcept
 {
-    if (0 > offset && std::abs(offset) > _cursorPositionY) {
-        _cursorPositionY = 0;
+    if (0 > offset && std::abs(offset) > _cursor.y) {
+        _cursor.y = 0;
     }
-    else if (_text.size() <= _cursorPositionY + offset) {
-        _cursorPositionY = _text.size() - 1;
+    else if (_text.size() <= _cursor.y + offset) {
+        _cursor.y = _text.size() - 1;
+        if (_cursor.x > _text.at(_cursor.y).length()) _cursor.x = _text.at(_cursor.y).length();
     }
     else {
-        _cursorPositionY += offset;
-        if (_cursorPositionX > _text.at(_cursorPositionY).length()) _cursorPositionX = _text.at(_cursorPositionY).length();
+        _cursor.y += offset;
+        if (_cursor.x > _text.at(_cursor.y).length()) _cursor.x = _text.at(_cursor.y).length();
     }
 }
 
+void ste::TextBuffer::moveCursorY(Cursor::pos pos) noexcept
+{
+    if (Cursor::pos::begin == pos) _cursor.y = 0;
+    else if (Cursor::pos::end == pos) _cursor.y = _text.size() - 1;
+}
+
+
 void ste::TextBuffer::setCursorX(unsigned int pos)
 {
-    if (_text.at(_cursorPositionY).length() < pos) 
+    if (_text.at(_cursor.y).length() < pos) 
         throw std::overflow_error("Given number is too large: cannot set the cursor to that position");
-    else _cursorPositionX = pos;
+    else _cursor.x = pos;
 }
 
 void ste::TextBuffer::setCursorY(unsigned int pos)
 {
     if (_text.size() < pos)
         throw std::overflow_error("Given number is too large: cannot set the cursor to that position");
-    else _cursorPositionY = pos;
+    else _cursor.y = pos;
 }
 
 void ste::TextBuffer::setCursor(unsigned int posX, unsigned int posY)

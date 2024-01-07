@@ -30,6 +30,15 @@ namespace ste
     class TextBuffer
     {
     public:
+        struct Cursor {
+            unsigned int x = 0;
+            unsigned int y = 0;
+            enum class pos {
+                begin,
+                end
+            };
+        };
+
         const std::vector <std::string>& text = _text;
         
         TextBuffer(FileHandler& fileHandle);
@@ -37,7 +46,9 @@ namespace ste
         unsigned int cursorPositionX() const noexcept;
         unsigned int cursorPositionY() const noexcept;
         void moveCursorX(int offset) noexcept;
+        void moveCursorX(Cursor::pos) noexcept;
         void moveCursorY(int offset) noexcept;
+        void moveCursorY(Cursor::pos) noexcept;
         void setCursorX(unsigned int pos);
         void setCursorY(unsigned int pos);
         void setCursor(unsigned int posX, unsigned int posY);
@@ -46,9 +57,8 @@ namespace ste
 
 
     private:
+        Cursor _cursor;
         std::vector <std::string> _text;
-        unsigned int _cursorPositionX;
-        unsigned int _cursorPositionY;
 
         void newLineBreak() noexcept;
         void deleteLineBreak() noexcept;
