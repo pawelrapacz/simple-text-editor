@@ -20,30 +20,37 @@
 #include <iostream>
 #include <windows.h>
 
-#include "ste.hpp"
-
+#include "Editor.hpp"
 
 
 int main(int argc, char const *argv[])
 {
-    if (2 > argc) return 1;
-
     SetConsoleCP( 65001 );
     SetConsoleOutputCP( 65001 );
     setlocale( LC_ALL, "65001" );
-    
-    if (2 == argc && ( strcmp(argv[1], "--version") || strcmp(argv[1], "-v") ))
-    {
+
+    if (2 != argc) {
+        std::cout << "You have to give a file/filename to work on\n";
+        return EXIT_FAILURE;
+    }
+
+    std::string arg = argv[1];
+    if ( arg == "--version" || arg ==  "-v" ) {
         std::cout << 
 R"(ste.exe 1.0.0
 Copyright (C) 2023  Paweł Rapacz
 This program comes with ABSOLUTELY NO WARRANTY, without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. This is free software,
 and you are welcome to redistribute it under certain conditions.)" << std::endl;
-        return 0;
+    }
+    else if ( arg == "--help" || arg ==  "-h" ) {
+        ste::Editor::help();
     }
     else {
-        std::cout << "Hello👋 World🌎!\n🦢 Zażółć gęślą jaźń" << std::endl;
-        return 0;
+        /* MAIN FUNCTIONALITY */
+        ste::Editor editor(arg);
+        editor.start();
     }
+
+    return EXIT_SUCCESS;
 }
