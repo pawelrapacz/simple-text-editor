@@ -26,16 +26,10 @@
 
 
 ste::FileHandler::FileHandler(const char* pathToFile)
-{
-    _path = pathToFile;
-    path(pathToFile);
-}
+    : _path(pathToFile) {}
 
 ste::FileHandler::FileHandler(const std::string pathToFile)
-{
-    _path = pathToFile;
-    path(pathToFile);
-}
+    : _path(pathToFile) {}
 
 ste::FileHandler::~FileHandler() {}
 
@@ -68,8 +62,10 @@ void ste::FileHandler::write(const std::vector <std::string>& text) const
     _file.open(_path, std::ios::out | std::ios::trunc);
     if (_file.fail()) throw std::runtime_error("Cannot save chnges to the file");
 
-    for (std::size_t i = 0; i < text.size(); i++)
-        _file << text.at(i) << '\n';
+    for (std::size_t i = 0; i < text.size(); i++) {
+        if ( text.size() - 1 == i) _file << text.at(i);
+        else _file << text.at(i) << '\n';
+    }
 
     _file.close();
 }
