@@ -16,10 +16,10 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-
 #include <iostream>
 #include <windows.h>
 
+#include "config.hpp"
 #include "Editor.hpp"
 
 
@@ -30,18 +30,18 @@ int main(int argc, char const *argv[])
     setlocale( LC_ALL, "65001" );
 
     if (2 != argc) {
-        std::cout << "You have to give a file/filename to work on\n";
+        std::cout << "You have to give a file/filename to work on" << std::endl;
         return EXIT_FAILURE;
     }
 
     std::string arg = argv[1];
     if ( arg == "--version" || arg ==  "-v" ) {
-        std::cout << 
-R"(ste.exe 1.0.0
-Copyright (C) 2023  Paweł Rapacz
-This program comes with ABSOLUTELY NO WARRANTY, without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. This is free software,
-and you are welcome to redistribute it under certain conditions.)" << std::endl;
+        std::cout <<
+        "ste.exe " << STE_VERSION << '\n' <<
+        "Copyright (C) " << STE_PUBLICATION_YEAR << " Paweł Rapacz\n" <<
+        "This program comes with ABSOLUTELY NO WARRANTY, without even the implied warranty of\n" <<
+        "MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. This is free software,\n" <<
+        "and you are welcome to redistribute it under certain conditions." << std::endl;
     }
     else if ( arg == "--help" || arg ==  "-h" ) {
         ste::Editor::help();
