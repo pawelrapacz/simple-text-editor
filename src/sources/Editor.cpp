@@ -19,31 +19,13 @@
 #include <iostream>
 #include <iomanip>
 #include <string>
+#include <sstream>
 #include <conio.h>
 #include <windows.h>
-
+#include <win-console-colors.h>
 
 #include "ste.hpp"
 #include "Editor.hpp"
-
-
-// windows console colors
-#define BLACK           0x00
-#define BLUE            0x01
-#define GREEN           0x02
-#define AQUA            0x03
-#define RED             0x04
-#define PURPLE          0x05
-#define YELLOW          0x06
-#define WHITE           0x07
-#define GRAY            0x08
-#define LIGHT_BLUE      0x09
-#define LIGHT_GREEN     0x0a
-#define LIGHT_AQUA      0x0b
-#define LIGHT_RED       0x0c
-#define LIGHT_PURPLE    0x0d
-#define LIGHT_YELLOW    0x0e
-#define BRIGHT_WHITE    0x0f
 
 
 ste::Editor::Editor(const char* pathToFile)
@@ -52,7 +34,7 @@ ste::Editor::Editor(const char* pathToFile)
     _console = GetStdHandle(STD_OUTPUT_HANDLE);
     GetConsoleScreenBufferInfo(_console, &_consoleInfo);
     GetConsoleCursorInfo(_console, &_cursorInfo);
-    SetConsoleTextAttribute(_console, BRIGHT_WHITE);
+    SetConsoleTextAttribute(_console, BRIGHTWHITE_BLACK);
 }
 
 ste::Editor::Editor(const std::string pathToFile)
@@ -61,14 +43,14 @@ ste::Editor::Editor(const std::string pathToFile)
     _console = GetStdHandle(STD_OUTPUT_HANDLE);
     GetConsoleScreenBufferInfo(_console, &_consoleInfo);
     GetConsoleCursorInfo(_console, &_cursorInfo);
-    SetConsoleTextAttribute(_console, BRIGHT_WHITE);
+    SetConsoleTextAttribute(_console, BRIGHTWHITE_BLACK);
 }
 
 ste::Editor::~Editor()
 {
     _cursorInfo.bVisible = true;
     SetConsoleCursorInfo(_console, &_cursorInfo); 
-    SetConsoleTextAttribute(_console, WHITE);
+    SetConsoleTextAttribute(_console, WHITE_BLACK);
 }
 
 
@@ -186,22 +168,24 @@ void ste::Editor::display() noexcept
         ((buffer.text.size() - _textOffset) < workspaceHeight) ? buffer.text.size() - _textOffset : workspaceHeight;
 
     // display top bar
-    std::cout << "ste.exe          file: " << _fileHandle.path() << "    lines: " << buffer.text.size() << '\n';
-    std::cout << std::setfill('-') << std::setw(_consoleInfo.dwSize.X) << '\r';
+    SetConsoleTextAttribute(_console, BLACK_AQUA);
+    std::wstringstream topBarContent;
+    topBarContent << L"ste.exe          file: " << _fileHandle.path().c_str() << L"    lines: " << buffer.text.size();
+    std::wcout << std::left << std::setw(_consoleInfo.dwSize.X - 1) << topBarContent.view();
 
     for (std::size_t i = _textOffset; i < buffer.text.size() && i < workspaceHeight + _textOffset; i++) {
-        SetConsoleTextAttribute(_console, AQUA);
+        SetConsoleTextAttribute(_console, BLACK_AQUA);
         std::cout << '\n' << std::setfill(' ') << std::setw(EDITOR_WORKSPACE_OFFSET_X - 1) << i + 1 << " "; // display line number
-        SetConsoleTextAttribute(_console, BRIGHT_WHITE);
+        SetConsoleTextAttribute(_console, BRIGHTWHITE_BLACK);
         std::cout << buffer.text.at(i);
     }
 
     // display free line indicators
     if (workspaceHeight > displayedLines) {
-        SetConsoleTextAttribute(_console, PURPLE);
+        SetConsoleTextAttribute(_console, PURPLE_BLACK);
         for (unsigned int i = 0; i < workspaceHeight - displayedLines; i++)
             std::cout << "\n~";
-        SetConsoleTextAttribute(_console, BRIGHT_WHITE);
+        SetConsoleTextAttribute(_console, BRIGHTWHITE_BLACK);
     }
 
     COORD cursorPos;
@@ -253,6 +237,7 @@ void ste::Editor::exit(exit_type type)
     // TODO: exception handling
     if (exit_type::save == type) _fileHandle.write( buffer.text );
     _running = false;
+    clearConsole();
 }
 
 

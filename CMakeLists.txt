@@ -18,12 +18,15 @@ set(FLAGS -Wall -Wextra)
 
 add_executable(${PROJECT_NAME} ${SOURCE_FILES})
 set_target_properties(${PROJECT_NAME} PROPERTIES
-    CXX_STANDARD 17
+    CXX_STANDARD 20
     CXX_STANDARD_REQUIRED ON
 )
 
 target_compile_options(${PROJECT_NAME} PRIVATE ${FLAGS})
-target_include_directories(${PROJECT_NAME} PRIVATE src/include)
+target_include_directories(${PROJECT_NAME} PRIVATE
+    external/win-console-colors/
+    src/include/
+)
 
 
 if(NOT CMAKE_BUILD_TYPE)

@@ -35,7 +35,7 @@ namespace ste
         unsigned int _textOffset = 0;
         FileHandler _fileHandle;
 
-        static constexpr unsigned int  EDITOR_WORKSPACE_OFFSET_Y = 2;
+        static constexpr unsigned int  EDITOR_WORKSPACE_OFFSET_Y = 1;
         static constexpr unsigned int  EDITOR_WORKSPACE_OFFSET_X = 5;
         
         //  console porperties
