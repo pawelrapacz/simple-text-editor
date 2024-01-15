@@ -41,7 +41,7 @@ namespace ste
         //  console porperties
         HANDLE _console;
         DWORD _consoleMode;
-        DWORD _originalConsoleMode;
+        DWORD _consoleOriginalMode;
         CONSOLE_CURSOR_INFO _cursorInfo;
         mutable CONSOLE_SCREEN_BUFFER_INFO _consoleInfo;
 

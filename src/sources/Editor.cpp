@@ -19,38 +19,59 @@
 #include <iostream>
 #include <iomanip>
 #include <string>
-#include <sstream>
 #include <conio.h>
 #include <windows.h>
-#include <win-console-colors.h>
 
 #include "ste.hpp"
 #include "Editor.hpp"
+
+
+#define ESC "\x1b"
+#define CSI "\x1b["
+#define OSC "\x1b]"
 
 
 ste::Editor::Editor(const char* pathToFile)
     : _fileHandle(pathToFile), buffer(_fileHandle)
 {
     _console = GetStdHandle(STD_OUTPUT_HANDLE);
+    GetConsoleMode(_console, &_consoleMode);
+    _consoleOriginalMode = _consoleMode;
+    _consoleMode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
+    SetConsoleMode(_console, _consoleMode);
     GetConsoleScreenBufferInfo(_console, &_consoleInfo);
     GetConsoleCursorInfo(_console, &_cursorInfo);
-    SetConsoleTextAttribute(_console, BRIGHTWHITE_BLACK);
+
+    std::cout << OSC "2;ste\x07";   // set window title
+    std::cout << CSI "?1049h";      // use alternate buffer
+    std::cout << CSI "5 q";         // set cursor shape
+    std::cout << CSI "1;1H";        // set cursor position
 }
 
 ste::Editor::Editor(const std::string pathToFile)
     : _fileHandle(pathToFile), buffer(_fileHandle)
 {
     _console = GetStdHandle(STD_OUTPUT_HANDLE);
+    GetConsoleMode(_console, &_consoleMode);
+    _consoleOriginalMode = _consoleMode;
+    _consoleMode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
+    SetConsoleMode(_console, _consoleMode);
     GetConsoleScreenBufferInfo(_console, &_consoleInfo);
     GetConsoleCursorInfo(_console, &_cursorInfo);
-    SetConsoleTextAttribute(_console, BRIGHTWHITE_BLACK);
+
+    std::cout << OSC "2;ste\x07";   // set window title
+    std::cout << CSI "?1049h";      // use alternate buffer
+    std::cout << CSI "5 q";         // set cursor shape
+    std::cout << CSI "1;1H";        // set cursor position
 }
 
 ste::Editor::~Editor()
 {
-    _cursorInfo.bVisible = true;
-    SetConsoleCursorInfo(_console, &_cursorInfo); 
-    SetConsoleTextAttribute(_console, WHITE_BLACK);
+    std::cout << CSI "?1049l";      // exit alternate buffer
+    std::cout << CSI "m";           // reset text formatting
+    std::cout << CSI "0 q";         // user cursor shape
+    std::cout << CSI "?25h";        // show cursor
+    SetConsoleMode(_console, _consoleOriginalMode);
 }
 
 
@@ -160,38 +181,46 @@ void ste::Editor::keyboardHandler() noexcept
 
 void ste::Editor::display() noexcept
 {
+    std::cout << CSI "?25l";        // hide cursor
+    std::cout << CSI "1;1H";        // set cursor position
+    GetConsoleScreenBufferInfo(_console, &_consoleInfo);
+
     unsigned int workspaceHeight = _consoleInfo.srWindow.Bottom + 1 - EDITOR_WORKSPACE_OFFSET_Y;
     updateTextOffset(workspaceHeight);
-    clearConsole();
 
     unsigned int displayedLines =
         ((buffer.text.size() - _textOffset) < workspaceHeight) ? buffer.text.size() - _textOffset : workspaceHeight;
 
-    // display top bar
-    SetConsoleTextAttribute(_console, BLACK_AQUA);
-    std::wstringstream topBarContent;
-    topBarContent << L"ste.exe          file: " << _fileHandle.path().c_str() << L"    lines: " << buffer.text.size();
-    std::wcout << std::left << std::setw(_consoleInfo.dwSize.X - 1) << topBarContent.view();
 
+    // display top bar
+    std::cout << CSI "38;2;255;255;255m";
+    std::cout << CSI "48;2;45;114;135m";
+    std::wcout << CSI "2K" << L"ste.exe          file: " << _fileHandle.path().c_str() << L"    lines: " << buffer.text.size();
+    std::cout << CSI "m";
+
+    // display text
     for (std::size_t i = _textOffset; i < buffer.text.size() && i < workspaceHeight + _textOffset; i++) {
-        SetConsoleTextAttribute(_console, BLACK_AQUA);
+        std::cout << CSI "38;2;255;255;255m";
+        std::cout << CSI "48;2;45;114;135m";
         std::cout << '\n' << std::setfill(' ') << std::setw(EDITOR_WORKSPACE_OFFSET_X - 1) << i + 1 << " "; // display line number
-        SetConsoleTextAttribute(_console, BRIGHTWHITE_BLACK);
+        std::cout << CSI "m" << CSI "0K";
         std::cout << buffer.text.at(i);
     }
 
     // display free line indicators
     if (workspaceHeight > displayedLines) {
-        SetConsoleTextAttribute(_console, PURPLE_BLACK);
+        std::cout << CSI "38;2;121;0;145m";
         for (unsigned int i = 0; i < workspaceHeight - displayedLines; i++)
-            std::cout << "\n~";
-        SetConsoleTextAttribute(_console, BRIGHTWHITE_BLACK);
+            std::cout << '\n' << CSI "2K" << '~';
+        std::cout << CSI "m";
     }
+
 
     COORD cursorPos;
     cursorPos.X = buffer.cursorPositionX() + EDITOR_WORKSPACE_OFFSET_X;
     cursorPos.Y = buffer.cursorPositionY() - _textOffset + EDITOR_WORKSPACE_OFFSET_Y;
     SetConsoleCursorPosition(_console, cursorPos);
+    std::cout << CSI "?25h";        // show cursor
 }
 
 void ste::Editor::updateTextOffset(unsigned int windowHeight) noexcept
@@ -202,33 +231,6 @@ void ste::Editor::updateTextOffset(unsigned int windowHeight) noexcept
         _textOffset = buffer.cursorPositionY() - windowHeight + 1;
 }
 
-void ste::Editor::clearConsole() const
-{
-    COORD coordScreen = {0, 0}; // home for the cursor
-    DWORD cCharsWritten;
-    DWORD dwConSize;
-
-    // Get the number of character cells in the current buffer.
-    if (!GetConsoleScreenBufferInfo(_console, &_consoleInfo))
-        return;
-
-    dwConSize = _consoleInfo.dwSize.X * _consoleInfo.dwSize.Y;
-
-    // Fill the entire screen with blanks.
-    if (!FillConsoleOutputCharacter(_console, (TCHAR)' ', dwConSize, coordScreen, &cCharsWritten))
-        return;
-
-    // Get the current text attribute.
-    if (!GetConsoleScreenBufferInfo(_console, &_consoleInfo))
-        return;
-
-    // Set the buffer's attributes accordingly.
-    if (!FillConsoleOutputAttribute(_console, _consoleInfo.wAttributes, dwConSize, coordScreen, &cCharsWritten))
-        return;
-
-    SetConsoleCursorPosition(_console, coordScreen);
-}
-
 void ste::Editor::save() const
 { _fileHandle.write( buffer.text ); }
 
@@ -237,7 +239,6 @@ void ste::Editor::exit(exit_type type)
     // TODO: exception handling
     if (exit_type::save == type) _fileHandle.write( buffer.text );
     _running = false;
-    clearConsole();
 }
 
 
